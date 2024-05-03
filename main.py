@@ -10,6 +10,7 @@ cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 face_close = cv2.imread("imgs/image_eye.png")
 face_open = cv2.imread("imgs/image_eye_open.png")
+face_surprised = cv2.imread("imgs/2.png")
 
 
 with pyvirtualcam.Camera(width=640, height=480, fps=30) as cam:
@@ -32,10 +33,15 @@ with pyvirtualcam.Camera(width=640, height=480, fps=30) as cam:
                     mouth_open = (
                         face_landmarks.landmark[14].y - face_landmarks.landmark[13].y
                     )
-                    if mouth_open > 0.005:
+                    if mouth_open > 0.005:  # FIXME
                         face_img = face_open.copy()
                     else:
                         face_img = face_close.copy()
+                    surprised = (
+                        face_landmarks.landmark[222].y - face_landmarks.landmark[65].y
+                    )
+                    if surprised > 0.019:  # FIXME
+                        face_img = face_surprised.copy()
                     pts1 = np.float32(
                         [
                             [
