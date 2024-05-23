@@ -4,31 +4,48 @@ import cv2
 import numpy as np
 import csv
 import scipy
-from model import KeyPointClassifier
 from utils import calc_landmark_list, pre_process_landmark
+import math
+import time
 
-mp_face_mesh = mp.solutions.face_mesh
+'''Set parameters '''
 cap = cv2.VideoCapture(0)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
-face_path = "faces/sasha/"
+DEBUG = not True
 
-faces = {
-    "Neutral": cv2.imread(face_path + "normal.png"),
-    "Happy": cv2.imread(face_path + "happy.png"),
-    "Sad": cv2.imread(face_path + "sad.png"),
-    "Angry": cv2.imread(face_path + "sad.png"),
-    "Surprise": cv2.imread(face_path + "surprise.png"),
-}
+angle_speed = 45
+motion_speed = 10
+position_limits = [-100, -50]
+face = ((180, 50), (325, 200))
+face_size = (face[1][0] - face[0][0], face[1][1] - face[0][1])
 
-with open(
-    "model/keypoint_classifier/keypoint_classifier_label.csv", encoding="utf-8-sig"
-) as f:
-    keypoint_classifier_labels = csv.reader(f)
-    keypoint_classifier_labels = [row[0] for row in keypoint_classifier_labels]
+amplitude = abs(position_limits[1] - position_limits[0]) / 2
+k = (position_limits[0] + position_limits[1]) / 2
 
-keypoint_classifier = KeyPointClassifier()
+enot = cv2.imread('images/enot.png', -1)
+enot = cv2.resize(enot, (450, 450))
+
+image_template = np.zeros((480, 640, 3), dtype=np.uint8)
+side_length = 50
+radius = 200
+
+'''____________________________'''
+
+h, w = image_template.shape[:2]
+center = (w // 2, h // 2)
+
+
+cv2.circle(image_template, center, radius, (255, 255, 255), -1)
+
+angle = 0
+position = 0
+
+old_time = time.time()
+
+mp_face_mesh = mp.solutions.face_mesh
+face_img = None
 
 with pyvirtualcam.Camera(width=640, height=480, fps=30) as cam:
     with mp_face_mesh.FaceMesh(
@@ -48,65 +65,50 @@ with pyvirtualcam.Camera(width=640, height=480, fps=30) as cam:
             results = face_mesh.process(image_rgb)
             if results.multi_face_landmarks:
                 for face_landmarks in results.multi_face_landmarks:
+                    face_img = image[int(face_landmarks.landmark[54].y * image.shape[0]) : int(face_landmarks.landmark[365].y * image.shape[0]),
+                          int(face_landmarks.landmark[54].x * image.shape[1]) : int(face_landmarks.landmark[288].x * image.shape[1])]
 
-                    landmark_list = calc_landmark_list(image_rgb, face_landmarks)
-                    pre_processed_landmark_list = pre_process_landmark(landmark_list)
-                    facial_emotion_id = keypoint_classifier(pre_processed_landmark_list)
-                    em = keypoint_classifier_labels[facial_emotion_id]
 
-                    face_img = faces[em].copy()
-                    pts1 = np.float32(
-                        [
-                            [
-                                int(face_landmarks.landmark[54].x * image.shape[1]),
-                                int(face_landmarks.landmark[54].y * image.shape[0]),
-                            ],
-                            [
-                                int(face_landmarks.landmark[284].x * image.shape[1]),
-                                int(face_landmarks.landmark[284].y * image.shape[0]),
-                            ],
-                            [
-                                int(face_landmarks.landmark[172].x * image.shape[1]),
-                                int(face_landmarks.landmark[136].y * image.shape[0]),
-                            ],
-                            [
-                                int(face_landmarks.landmark[288].x * image.shape[1]),
-                                int(face_landmarks.landmark[365].y * image.shape[0]),
-                            ],
-                        ]
-                    )
-                    pts2 = np.float32(
-                        [
-                            [0, 0],
-                            [face_img.shape[1], 0],
-                            [0, face_img.shape[0]],
-                            [face_img.shape[1], face_img.shape[0]],
-                        ]
-                    )
-                    h, _ = cv2.findHomography(pts2, pts1)
-                    r = cv2.warpPerspective(
-                        face_img, h, (image.shape[1], image.shape[0])
-                    )
+            
+            rotated_image = np.copy(image_template)
 
-                    mask = cv2.cvtColor(r, cv2.COLOR_BGR2GRAY)
-                    _, mask = cv2.threshold(mask, 10, 255, cv2.THRESH_BINARY)
-                    mask: np.ndarray = (
-                        scipy.ndimage.binary_fill_holes(mask).astype(np.uint8) * 255
-                    )
+            if not(face_img is None):
+                
+                position = int(math.sin(time.time() * motion_speed) * amplitude + k)
 
-                    background_with_mask = cv2.bitwise_and(
-                        image, image, mask=cv2.bitwise_not(mask)
-                    )
-                    overlay_with_mask = cv2.bitwise_and(r, r, mask=mask)
-                    image = cv2.add(background_with_mask, overlay_with_mask)
+                part = rotated_image[center[1] + position : center[1] + enot.shape[0] + position,
+                              center[0] - enot.shape[1] // 2 : center[0] + enot.shape[1] // 2]
 
-            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-            cam.send(image)
+                mask_inv = cv2.bitwise_not(enot[:part.shape[0],:,-1])
+                temp1 = cv2.bitwise_and(part, part, mask = mask_inv)
+                temp2 = cv2.bitwise_and(enot[:part.shape[0],:,:-1], enot[:part.shape[0],:,:-1], mask = enot[:part.shape[0],:,-1])
+                try:
+                    temp2[face[0][1] : face[1][1], face[0][0] : face[1][0]] = cv2.resize(face_img, face_size)
+                except:
+                    continue
+
+                rotated_image[center[1] + position : center[1] + enot.shape[0] + position,
+                              center[0] - enot.shape[1] // 2 : center[0] + enot.shape[1] // 2] = cv2.add(temp1,temp2) 
+                
+                
+                # Rotate the image
+                rotation_matrix = cv2.getRotationMatrix2D(center, angle, 1)
+                rotated_image = cv2.warpAffine(rotated_image, rotation_matrix, (w, h))
+
+                rotated_image = np.where(image_template==0, 0, rotated_image)
+                rotated_image = cv2.cvtColor(rotated_image, cv2.COLOR_BGR2RGB)
+        
+                angle += (time.time() - old_time) * angle_speed
+                old_time = time.time()
+    
+            cam.send(rotated_image)
             cam.sleep_until_next_frame()
-            # cv2.imshow(":)", image)
 
-            # if cv2.waitKey(5) == ord("q"):
-            #     break
+            if DEBUG:
+                cv2.imshow('Result from the Brugge', rotated_image)
+                
+                if cv2.waitKey(5) == ord("q"):
+                     break
 
         cap.release()
         cv2.destroyAllWindows()
