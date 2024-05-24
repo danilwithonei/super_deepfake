@@ -54,7 +54,10 @@ with pyvirtualcam.Camera(width=640, height=480, fps=30) as cam:
             face_img = cv2.addWeighted(face_img, 0.5, _filter, 0.5, 0)
 
             screen[y : y + square_size, x : x + square_size] = face_img
-            cv2.imshow("DVD", screen)
+            screen = cv2.cvtColor(screen, cv2.COLOR_BGR2RGB)
+            cam.send(screen)
+            cam.sleep_until_next_frame()
+            
 
             x += speed_x
             y += speed_y
@@ -65,7 +68,8 @@ with pyvirtualcam.Camera(width=640, height=480, fps=30) as cam:
             if y <= 0 or y + square_size >= screen_height:
                 speed_y = -speed_y
                 ch = random.randint(0, 2)
-
-            if cv2.waitKey(1) & 0xFF == ord("q"):
-                break
+            # cv2.imshow("DVD", screen)
+            # if cv2.waitKey(1) & 0xFF == ord("q"):
+            #     break
+        cap.release()
         cv2.destroyAllWindows()
