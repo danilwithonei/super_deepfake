@@ -15,11 +15,11 @@ screen_width = 640
 screen_height = 480
 screen = np.zeros((screen_height, screen_width, 3), dtype=np.uint8)
 
-square_size = 150
+square_size = 128
 x = 0
 y = 0
-speed_x = 5
-speed_y = 5
+speed_x = 8
+speed_y = 8
 
 _filter = np.zeros(shape=(square_size, square_size, 3), dtype=np.uint8)
 ch = 0
@@ -57,7 +57,6 @@ with pyvirtualcam.Camera(width=640, height=480, fps=30) as cam:
             screen = cv2.cvtColor(screen, cv2.COLOR_BGR2RGB)
             cam.send(screen)
             cam.sleep_until_next_frame()
-            
 
             x += speed_x
             y += speed_y
