@@ -3,3 +3,5 @@ mediapipe
 pyvirtualcam
 scipy
 tensorflow
+pyqt5
+opencv-python-headless

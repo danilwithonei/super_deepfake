@@ -1,112 +1,147 @@
-import mediapipe as mp
-import pyvirtualcam
+import sys
 import cv2
-import numpy as np
-import csv
-import scipy
-from model import KeyPointClassifier
-from utils import calc_landmark_list, pre_process_landmark
+import time
+import pyvirtualcam
 
-mp_face_mesh = mp.solutions.face_mesh
-cap = cv2.VideoCapture(0)
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+from PyQt5.QtGui import QImage, QPixmap
+from PyQt5.QtCore import Qt, QTimer
+from PyQt5.QtWidgets import (
+    QApplication,
+    QWidget,
+    QVBoxLayout,
+    QGridLayout,
+    QPushButton,
+    QHBoxLayout,
+    QLabel,
+    QComboBox,
+    QLineEdit,
+)
 
-face_path = "faces/sasha/"
+from effects.base_effect import BaseEffect
+from effects.effect1 import Effect1
+from effects.effect2 import Effect2
+from effects.effect3 import Effect3
+from effects.effect4 import Effect4
 
-faces = {
-    "Neutral": cv2.imread(face_path + "normal.png"),
-    "Happy": cv2.imread(face_path + "happy.png"),
-    "Sad": cv2.imread(face_path + "sad.png"),
-    "Angry": cv2.imread(face_path + "sad.png"),
-    "Surprise": cv2.imread(face_path + "surprise.png"),
-}
 
-with open(
-    "model/keypoint_classifier/keypoint_classifier_label.csv", encoding="utf-8-sig"
-) as f:
-    keypoint_classifier_labels = csv.reader(f)
-    keypoint_classifier_labels = [row[0] for row in keypoint_classifier_labels]
+class Window(QWidget):
+    def __init__(self):
+        super(Window, self).__init__()
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.update_frame)
+        self.capture = cv2.VideoCapture(0)
+        self.timer.start(1)
+        self.cam = pyvirtualcam.Camera(width=640, height=480, fps=30)
+        self.init_ui()
 
-keypoint_classifier = KeyPointClassifier()
+    def init_ui(self):
+        self.setWindowTitle("SuPeR DeEpFaKe")
+        self.setGeometry(100, 100, 800, 600)
 
-with pyvirtualcam.Camera(width=640, height=480, fps=30) as cam:
-    with mp_face_mesh.FaceMesh(
-        static_image_mode=False,
-        max_num_faces=1,
-        refine_landmarks=True,
-        min_detection_confidence=0.5,
-        min_tracking_confidence=0.5,
-    ) as face_mesh:
+        layout = QVBoxLayout()
+        self.setLayout(layout)
 
-        while cap.isOpened():
-            success, image = cap.read()
-            if not success:
-                print("Ignoring empty camera frame.")
-                continue
-            image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-            results = face_mesh.process(image_rgb)
-            if results.multi_face_landmarks:
-                for face_landmarks in results.multi_face_landmarks:
+        cap_l = QHBoxLayout()
+        self.video_label = QLabel("video", self)
+        self.video_label.setScaledContents(True)
+        cap_l.addWidget(self.video_label)
 
-                    landmark_list = calc_landmark_list(image_rgb, face_landmarks)
-                    pre_processed_landmark_list = pre_process_landmark(landmark_list)
-                    facial_emotion_id = keypoint_classifier(pre_processed_landmark_list)
-                    em = keypoint_classifier_labels[facial_emotion_id]
+        effects_l = QVBoxLayout()
+        effects_l.setAlignment(Qt.AlignTop)
 
-                    face_img = faces[em].copy()
-                    pts1 = np.float32(
-                        [
-                            [
-                                int(face_landmarks.landmark[54].x * image.shape[1]),
-                                int(face_landmarks.landmark[54].y * image.shape[0]),
-                            ],
-                            [
-                                int(face_landmarks.landmark[284].x * image.shape[1]),
-                                int(face_landmarks.landmark[284].y * image.shape[0]),
-                            ],
-                            [
-                                int(face_landmarks.landmark[172].x * image.shape[1]),
-                                int(face_landmarks.landmark[136].y * image.shape[0]),
-                            ],
-                            [
-                                int(face_landmarks.landmark[288].x * image.shape[1]),
-                                int(face_landmarks.landmark[365].y * image.shape[0]),
-                            ],
-                        ]
-                    )
-                    pts2 = np.float32(
-                        [
-                            [0, 0],
-                            [face_img.shape[1], 0],
-                            [0, face_img.shape[0]],
-                            [face_img.shape[1], face_img.shape[0]],
-                        ]
-                    )
-                    h, _ = cv2.findHomography(pts2, pts1)
-                    r = cv2.warpPerspective(
-                        face_img, h, (image.shape[1], image.shape[0])
-                    )
+        effect_label = QLabel("Effect")
+        effect_label.setFixedWidth(200)
+        effects_l.addWidget(effect_label)
 
-                    mask = cv2.cvtColor(r, cv2.COLOR_BGR2GRAY)
-                    _, mask = cv2.threshold(mask, 10, 255, cv2.THRESH_BINARY)
-                    mask: np.ndarray = (
-                        scipy.ndimage.binary_fill_holes(mask).astype(np.uint8) * 255
-                    )
+        self.combo_box = QComboBox(self)
+        self.combo_box.setFixedWidth(200)
+        self.combo_box.currentIndexChanged.connect(self.change_effect)
+        effects_l.addWidget(self.combo_box)
 
-                    background_with_mask = cv2.bitwise_and(
-                        image, image, mask=cv2.bitwise_not(mask)
-                    )
-                    overlay_with_mask = cv2.bitwise_and(r, r, mask=mask)
-                    image = cv2.add(background_with_mask, overlay_with_mask)
+        self.info_label = QLabel("Info:")
+        self.info_label.setFixedWidth(200)
+        effects_l.addWidget(self.info_label)
 
-            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-            cam.send(image)
-            cam.sleep_until_next_frame()
-            # cv2.imshow(":)", image)
+        self.settings = QGridLayout()
+        self.settings_list: list[tuple[QLabel, QLineEdit]] = []
+        labels = ["1:", "2:", "3:", "4:", "5:"]
 
-            # if cv2.waitKey(5) == ord("q"):
-            #     break
+        for row, label in enumerate(labels):
+            self.settings_list.append((QLabel(label), QLineEdit()))
+            self.settings.addWidget(self.settings_list[row][0], row, 0)
+            self.settings.addWidget(self.settings_list[row][1], row, 1)
+            self.settings_list[row][0].setVisible(False)
+            self.settings_list[row][1].setVisible(False)
+            self.settings_list[row][0].setFixedWidth(100)
+            self.settings_list[row][1].setFixedWidth(100)
 
-        cap.release()
-        cv2.destroyAllWindows()
+        effects_l.addLayout(self.settings)
+
+        self.button_start = QPushButton("Start", self)
+        self.button_start.setFixedWidth(200)
+        self.button_start.clicked.connect(self.start_effect)
+        effects_l.addWidget(self.button_start)
+
+        self.effect: BaseEffect | None = None
+
+        self.effect_dict: dict[str, BaseEffect] = {
+            "DVD": Effect1,
+            "Rayn Gosling": Effect2,
+            "Deepfake": Effect3,
+            "Enot": Effect4,
+        }
+        for led in self.effect_dict.keys():
+            self.combo_box.addItem(led)
+
+        cap_l.addLayout(effects_l)
+        layout.addLayout(cap_l)
+        self.show()
+
+    def start_effect(self):
+        settings_dict = {}
+        for i, (k, v) in enumerate(self.effect._settings_dict.items()):
+            settings_dict[k] = self.settings_list[i][1].text()
+
+        self.effect.settings(settings_dict)
+
+    def change_effect(self):
+        for i in range(len(self.settings_list)):
+            self.settings_list[i][0].setVisible(False)
+            self.settings_list[i][1].setVisible(False)
+        effiect_name = self.combo_box.currentText()
+        self.effect = self.effect_dict[effiect_name]()
+        for i, (k, v) in enumerate(self.effect._settings_dict.items()):
+            self.settings_list[i][0].setText(k)
+            self.settings_list[i][1].setText(v)
+            self.settings_list[i][0].setVisible(True)
+            self.settings_list[i][1].setVisible(True)
+
+    def update_frame(self):
+        ret, frame = self.capture.read()
+        old_time = time.time()
+        if ret:
+            if self.effect is not None:
+                frame = self.effect.set_prikol_on_img(frame)
+            self.show_img(frame)
+            self.send_to_cam(frame)
+        fps = 1 / (time.time() - old_time)
+        self.info_label.setText(f"FPS:{int(fps)}")
+
+    def show_img(self, frame):
+        rgb_image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        h, w, ch = rgb_image.shape
+        bytes_per_line = ch * w
+        q_image = QImage(rgb_image.data, w, h, bytes_per_line, QImage.Format_RGB888)
+        pixmap = QPixmap.fromImage(q_image)
+        self.video_label.setPixmap(pixmap)
+
+    def send_to_cam(self, img):
+        image = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        self.cam.send(image)
+        self.cam.sleep_until_next_frame()
+
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    window = Window()
+    sys.exit(app.exec_())
