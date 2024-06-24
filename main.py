@@ -3,9 +3,9 @@ import cv2
 import time
 import pyvirtualcam
 
-from PyQt5.QtGui import QImage, QPixmap
-from PyQt5.QtCore import Qt, QTimer
-from PyQt5.QtWidgets import (
+from PyQt6.QtGui import QImage, QPixmap
+from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtWidgets import (
     QApplication,
     QWidget,
     QVBoxLayout,
@@ -47,7 +47,7 @@ class Window(QWidget):
         cap_l.addWidget(self.video_label)
 
         effects_l = QVBoxLayout()
-        effects_l.setAlignment(Qt.AlignTop)
+        effects_l.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         effect_label = QLabel("Effect")
         effect_label.setFixedWidth(200)
@@ -131,7 +131,7 @@ class Window(QWidget):
         rgb_image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         h, w, ch = rgb_image.shape
         bytes_per_line = ch * w
-        q_image = QImage(rgb_image.data, w, h, bytes_per_line, QImage.Format_RGB888)
+        q_image = QImage(rgb_image.data, w, h, bytes_per_line, QImage.Format.Format_RGB888)
         pixmap = QPixmap.fromImage(q_image)
         self.video_label.setPixmap(pixmap)
 
@@ -144,4 +144,4 @@ class Window(QWidget):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = Window()
-    sys.exit(app.exec_())
+    sys.exit(app.exec())

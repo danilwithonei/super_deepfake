@@ -6,8 +6,8 @@ import itertools
 
 
 def mediapipe_detection(
-    img: cv2.Mat, model: mp.solutions.pose.Pose
-) -> tuple[cv2.Mat, dict]:
+    img:np.ndarray, model: mp.solutions.pose.Pose
+) -> tuple[np.ndarray, dict]:
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     img.flags.writeable = False
     results = model.process(img)
@@ -37,8 +37,8 @@ def get_poly_by_line(
 
 
 def paste_piece_of_img(
-    img: cv2.Mat,
-    piece_of_img: cv2.Mat,
+    img: np.ndarray,
+    piece_of_img: np.ndarray,
     in_points: tuple[int, int, int, int],
     from_points: tuple[int, int, int, int],
 ):
