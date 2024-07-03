@@ -23,6 +23,7 @@ from effects.effect2 import Effect2
 from effects.effect3 import Effect3
 from effects.effect4 import Effect4
 from effects.effect5 import Effect5
+from effects.effect6 import Effect6
 
 
 class Window(QWidget):
@@ -91,6 +92,7 @@ class Window(QWidget):
             "Deepfake": Effect3,
             "Enot": Effect4,
             "Glitch": Effect5,
+            "text": Effect6,
         }
         for led in self.effect_dict.keys():
             self.combo_box.addItem(led)
@@ -133,7 +135,9 @@ class Window(QWidget):
         rgb_image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         h, w, ch = rgb_image.shape
         bytes_per_line = ch * w
-        q_image = QImage(rgb_image.data, w, h, bytes_per_line, QImage.Format.Format_RGB888)
+        q_image = QImage(
+            rgb_image.data, w, h, bytes_per_line, QImage.Format.Format_RGB888
+        )
         pixmap = QPixmap.fromImage(q_image)
         self.video_label.setPixmap(pixmap)
 
