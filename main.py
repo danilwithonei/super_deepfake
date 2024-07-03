@@ -22,6 +22,7 @@ from effects.effect1 import Effect1
 from effects.effect2 import Effect2
 from effects.effect3 import Effect3
 from effects.effect4 import Effect4
+from effects.effect5 import Effect5
 
 
 class Window(QWidget):
@@ -89,6 +90,7 @@ class Window(QWidget):
             "Rayn Gosling": Effect2,
             "Deepfake": Effect3,
             "Enot": Effect4,
+            "Glitch": Effect5,
         }
         for led in self.effect_dict.keys():
             self.combo_box.addItem(led)
@@ -143,5 +145,6 @@ class Window(QWidget):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+
     window = Window()
     sys.exit(app.exec())
