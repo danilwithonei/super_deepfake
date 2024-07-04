@@ -8,10 +8,6 @@ class Effect6(BaseEffect):
     def __init__(self) -> None:
         super().__init__()
         self.cloud_4ch = cv2.imread("./images/pngwing.com.png", cv2.IMREAD_UNCHANGED)
-        self.cloud_4ch = cv2.resize(self.cloud_4ch, (200, 200))
-        self.cloud_mask = self.cloud_4ch[:, :, 3]
-        self.cloud_img = self.cloud_4ch[:, :, :3]
-        self.ones = np.ones_like(self.cloud_img).astype(np.uint8) * 255
         self.text = "Hello"
 
         self._settings_dict = {
@@ -25,10 +21,28 @@ class Effect6(BaseEffect):
         self.text = settings_dict["text"]
         self.mp_face_det = mp.solutions.face_detection
         self.model = self.mp_face_det.FaceDetection()
-        self.ones.fill(255)
-        self.ones = cv2.putText(
-            self.ones, self.text, (10, 100), cv2.FONT_HERSHEY_COMPLEX, 1, (0, 0, 0)
+
+        y0, dy = 50, 30
+        texts = self.text.split("\\n")
+        self.cloud_width = (
+            len(sorted(texts, key=lambda x: len(x), reverse=True)[0]) * 30
         )
+        self.cloud_height = len(texts) * 70
+
+        self.cloud_4ch = cv2.resize(
+            self.cloud_4ch, (self.cloud_width, self.cloud_height)
+        )
+        self.cloud_mask = self.cloud_4ch[:, :, 3]
+        self.cloud_img = self.cloud_4ch[:, :, :3]
+        self.ones = np.ones_like(self.cloud_img).astype(np.uint8) * 255
+        self.ones.fill(255)
+
+        for i, line in enumerate(texts):
+            y = y0 + i * dy
+            self.ones = cv2.putText(
+                self.ones, line, (30, y), cv2.FONT_HERSHEY_COMPLEX, 1, 2
+            )
+
         self.is_ready = True
 
     def set_prikol_on_img(self, img: np.ndarray) -> np.ndarray:
@@ -52,12 +66,18 @@ class Effect6(BaseEffect):
                 self.prev_x, self.prev_y = smooth_x, smooth_y
                 try:
                     img_ = cv2.bitwise_and(
-                        img[smooth_y - 200 : smooth_y, smooth_x - 200 : smooth_x],
+                        img[
+                            smooth_y - self.cloud_height : smooth_y,
+                            smooth_x - self.cloud_width : smooth_x,
+                        ],
                         self.ones.copy(),
                         dst=self.ones.copy(),
                         mask=cv2.bitwise_not(self.cloud_mask),
                     )
-                    img[smooth_y - 200 : smooth_y, smooth_x - 200 : smooth_x] = img_
+                    img[
+                        smooth_y - self.cloud_height : smooth_y,
+                        smooth_x - self.cloud_width : smooth_x,
+                    ] = img_
                 except:
                     pass
         return img
