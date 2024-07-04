@@ -17,6 +17,8 @@ class Effect6(BaseEffect):
         self._settings_dict = {
             "text": f"{self.text}",
         }
+        self.prev_x, self.prev_y = 0, 0
+        self.alpha = 0.9
         self.is_ready = False
 
     def settings(self, settings_dict: dict):
@@ -24,7 +26,9 @@ class Effect6(BaseEffect):
         self.mp_face_det = mp.solutions.face_detection
         self.model = self.mp_face_det.FaceDetection()
         self.ones.fill(255)
-        self.ones = cv2.putText(self.ones, self.text, (10, 100), 1, 2, (0, 0, 0))
+        self.ones = cv2.putText(
+            self.ones, self.text, (10, 100), cv2.FONT_HERSHEY_COMPLEX, 1, (0, 0, 0)
+        )
         self.is_ready = True
 
     def set_prikol_on_img(self, img: np.ndarray) -> np.ndarray:
@@ -43,14 +47,17 @@ class Effect6(BaseEffect):
                     int(bboxC.width * iw),
                     int(bboxC.height * ih),
                 )
+                smooth_x = int(self.alpha * self.prev_x + (1 - self.alpha) * x_f)
+                smooth_y = int(self.alpha * self.prev_y + (1 - self.alpha) * y_f)
+                self.prev_x, self.prev_y = smooth_x, smooth_y
                 try:
                     img_ = cv2.bitwise_and(
-                        img[y_f - 200 : y_f, x_f - 200 : x_f],
+                        img[smooth_y - 200 : smooth_y, smooth_x - 200 : smooth_x],
                         self.ones.copy(),
                         dst=self.ones.copy(),
                         mask=cv2.bitwise_not(self.cloud_mask),
                     )
-                    img[y_f - 200 : y_f, x_f - 200 : x_f] = img_
+                    img[smooth_y - 200 : smooth_y, smooth_x - 200 : smooth_x] = img_
                 except:
                     pass
         return img
