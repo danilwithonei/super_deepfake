@@ -1,12 +1,11 @@
 import numpy as np
 import cv2
-import random
 from effects.base_effect import BaseEffect
 from collections import deque
 import mediapipe as mp
 
 
-class Effect7(BaseEffect):
+class Effect8(BaseEffect):
     def __init__(self) -> None:
         super().__init__()
         self.maxlen = 10
@@ -31,10 +30,10 @@ class Effect7(BaseEffect):
         condition = np.stack((results.segmentation_mask,) * 3, axis=-1) > 0.1
 
         bg_image = np.zeros(img.shape, dtype=np.uint8)
-        bg_image[:] = (0,0,0)
+        bg_image[:] = (0, 0, 0)
         output_image = np.where(condition, img, bg_image)
         self.images.append(output_image)
         for img_ in self.images:
-            img = cv2.addWeighted(img,1,img_,0.2,1)
+            img = cv2.addWeighted(img, 1, img_, 0.2, 1)
 
         return img
