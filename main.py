@@ -94,7 +94,7 @@ class Window(QWidget):
             "Enot": Effect4,
             "Glitch": Effect5,
             "text": Effect6,
-            "Jesus": Effect7,
+            "Jesus": Effect8,
         }
         for led in self.effect_dict.keys():
             self.combo_box.addItem(led)
