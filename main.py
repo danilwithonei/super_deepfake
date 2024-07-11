@@ -25,6 +25,7 @@ from effects.effect4 import Effect4
 from effects.effect5 import Effect5
 from effects.effect6 import Effect6
 from effects.effect7 import Effect7
+from effects.effect8 import Effect8
 
 
 class Window(QWidget):
@@ -95,6 +96,7 @@ class Window(QWidget):
             "Glitch": Effect5,
             "text": Effect6,
             "skuf": Effect7,
+            "Jesus": Effect8,
         }
         for led in self.effect_dict.keys():
             self.combo_box.addItem(led)
