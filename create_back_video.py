@@ -2,8 +2,8 @@ import mediapipe as mp
 import cv2
 
 
-path_to_video = "./back_videos/rock/1.mp4"
-path_to_ann = "./back_videos/rock/2.txt"
+path_to_video = "./back_videos/ho/1.mp4"
+path_to_ann = "./back_videos/ho/2.txt"
 
 cap = cv2.VideoCapture(path_to_video)
 
@@ -37,11 +37,13 @@ with mp_face_mesh.FaceMesh(
 
                     x4 = int(face_landmarks.landmark[288].x * img.shape[1])
                     y4 = int(face_landmarks.landmark[365].y * img.shape[0])
+
+                f.write(f"{i} {x1} {y1} {x2} {y2} {x3} {y3} {x4} {y4}\n")
             i += 1
-            f.write(f"{i} {x1} {y1} {x2} {y2} {x3} {y3} {x4} {y4}\n")
-            cv2.imshow("res", img)
+            # cv2.imshow("res", img)
+            print(i)
 
-            if cv2.waitKey(1) == ord("q"):
-                break
+            # if cv2.waitKey(1) == ord("q"):
+            #     break
 
-cv2.destroyAllWindows()
+# cv2.destroyAllWindows()
