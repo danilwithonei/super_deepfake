@@ -24,6 +24,8 @@ class Effect7(BaseEffect):
         self.scr = mss.mss()
         self.monitor = self.scr.monitors[1]
         self.is_ready = False
+        self.mon_w = self.monitor["width"]
+        self.mon_h = self.monitor["height"]
 
     def settings(self, settings_dict: dict):
         self.back_img_path = settings_dict["back_path"]
@@ -73,9 +75,9 @@ class Effect7(BaseEffect):
             ],
             [
                 [0, 0],
-                [0, 1080],
-                [1920, 1080],
-                [1920, 0],
+                [0, self.mon_h],
+                [self.mon_w, self.mon_h],
+                [self.mon_w, 0],
             ],
         )
 

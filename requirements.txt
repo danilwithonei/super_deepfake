@@ -5,3 +5,4 @@ scipy
 tensorflow
 pyqt6
 opencv-python-headless
+mss

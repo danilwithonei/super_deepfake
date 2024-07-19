@@ -2,37 +2,48 @@ import mediapipe as mp
 import cv2
 
 
-path_to_video = "./back_videos/rock/1.mp4"
-path_to_ann = "./back_videos/rock/1.txt"
+path_to_video = "./back_videos/ho/1.mp4"
+path_to_ann = "./back_videos/ho/2.txt"
 
 cap = cv2.VideoCapture(path_to_video)
 
-mp_face_det = mp.solutions.face_detection
-with mp_face_det.FaceDetection() as model:
+mp_face_mesh = mp.solutions.face_mesh
+
+with mp_face_mesh.FaceMesh(
+    static_image_mode=False,
+    max_num_faces=1,
+    refine_landmarks=True,
+    min_detection_confidence=0.5,
+    min_tracking_confidence=0.5,
+) as model:
     with open(path_to_ann, "w") as f:
         i = 0
         while True:
             ret, img = cap.read()
             if not ret:
                 break
-
             img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
             results = model.process(img_rgb)
-            if results.detections:
-                for detection in results.detections:
-                    bboxC = detection.location_data.relative_bounding_box
-                    ih, iw, _ = img.shape
-                    x_f, y_f, w, h = (
-                        int(bboxC.xmin * iw),
-                        int(bboxC.ymin * ih),
-                        int(bboxC.width * iw),
-                        int(bboxC.height * ih),
-                    )
+            if results.multi_face_landmarks:
+                for face_landmarks in results.multi_face_landmarks:
+                    x1 = int(face_landmarks.landmark[54].x * img.shape[1])
+                    y1 = int(face_landmarks.landmark[54].y * img.shape[0])
+
+                    x2 = int(face_landmarks.landmark[284].x * img.shape[1])
+                    y2 = int(face_landmarks.landmark[284].y * img.shape[0])
+
+                    x3 = int(face_landmarks.landmark[172].x * img.shape[1])
+                    y3 = int(face_landmarks.landmark[136].y * img.shape[0])
+
+                    x4 = int(face_landmarks.landmark[288].x * img.shape[1])
+                    y4 = int(face_landmarks.landmark[365].y * img.shape[0])
+
+                f.write(f"{i} {x1} {y1} {x2} {y2} {x3} {y3} {x4} {y4}\n")
             i += 1
-            f.write(f"{i} {x_f} {y_f} {w} {h}\n")
-            cv2.imshow("res", img)
+            # cv2.imshow("res", img)
+            print(i)
 
-            if cv2.waitKey(1) == ord("q"):
-                break
+            # if cv2.waitKey(1) == ord("q"):
+            #     break
 
-cv2.destroyAllWindows()
+# cv2.destroyAllWindows()

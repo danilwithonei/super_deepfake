@@ -41,6 +41,7 @@ def paste_piece_of_img(
     piece_of_img: np.ndarray,
     in_points: tuple[int, int, int, int],
     from_points: tuple[int, int, int, int],
+    mask = None
 ):
     pts1 = np.array(in_points)
     pts2 = np.array(from_points)
@@ -50,8 +51,11 @@ def paste_piece_of_img(
     res = cv2.warpPerspective(piece_of_img, h, (img.shape[1], img.shape[0]))
 
     # paste piece of image in another by mask
-    res_gray = cv2.cvtColor(res, cv2.COLOR_BGR2GRAY)
-    _, mask = cv2.threshold(res_gray, 1, 255, cv2.THRESH_BINARY)
+    if mask is None:
+        res_gray = cv2.cvtColor(res, cv2.COLOR_BGR2GRAY)
+        _, mask = cv2.threshold(res_gray, 1, 255, cv2.THRESH_BINARY)
+    else:
+        mask = cv2.warpPerspective(mask, h, (img.shape[1], img.shape[0]))
     result_img = cv2.bitwise_and(img, img, mask=cv2.bitwise_not(mask))
     result_img = cv2.add(result_img, res)
     return result_img
