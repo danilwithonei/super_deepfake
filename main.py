@@ -18,6 +18,8 @@ from PyQt6.QtWidgets import (
 )
 
 from effects.base_effect import BaseEffect
+
+# FIXME : fix imports
 from effects.effect1 import Effect1
 from effects.effect2 import Effect2
 from effects.effect3 import Effect3
@@ -27,6 +29,8 @@ from effects.effect6 import Effect6
 from effects.effect7 import Effect7
 from effects.effect8 import Effect8
 from effects.effect9 import Effect9
+from effects.effect10 import Effect10
+
 
 class Window(QWidget):
     def __init__(self):
@@ -98,6 +102,7 @@ class Window(QWidget):
             "skuf": Effect7,
             "Jesus": Effect8,
             "rock": Effect9,
+            "draw": Effect10,
         }
         for led in self.effect_dict.keys():
             self.combo_box.addItem(led)
@@ -131,7 +136,7 @@ class Window(QWidget):
         if ret:
             if self.effect is not None:
                 frame = self.effect.set_prikol_on_img(frame)
-            frame = cv2.resize(frame,(640,480))
+            frame = cv2.resize(frame, (640, 480))
             self.show_img(frame)
             self.send_to_cam(frame)
         fps = 1 / (time.time() - old_time)
