@@ -3,6 +3,7 @@ ultra mega deepfake(not)
 
 ### install
 ```bash
+sudo apt-get install -y libxcb-cursor-dev
 pip install -r requirements.txt
 ```
 ### before run
