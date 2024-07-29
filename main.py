@@ -30,7 +30,7 @@ from effects.effect7 import Effect7
 from effects.effect8 import Effect8
 from effects.effect9 import Effect9
 from effects.effect10 import Effect10
-
+from effects.effect11 import Effect11
 
 class Window(QWidget):
     def __init__(self):
@@ -103,6 +103,7 @@ class Window(QWidget):
             "Jesus": Effect8,
             "rock": Effect9,
             "draw": Effect10,
+            "pix":Effect11,
         }
         for led in self.effect_dict.keys():
             self.combo_box.addItem(led)
