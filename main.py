@@ -32,6 +32,7 @@ from effects.effect9 import Effect9
 from effects.effect10 import Effect10
 from effects.effect11 import Effect11
 from effects.effect12 import Effect12
+from effects.effect13 import Effect13
 
 class Window(QWidget):
     def __init__(self):
@@ -105,7 +106,8 @@ class Window(QWidget):
             "rock": Effect9,
             "draw": Effect10,
             "pix":Effect11,
-            "nokia":Effect12
+            "nokia":Effect12,
+            "VHS":Effect13
         }
         for led in self.effect_dict.keys():
             self.combo_box.addItem(led)
