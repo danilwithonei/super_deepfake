@@ -35,6 +35,9 @@ from effects.effect12 import Effect12
 from effects.effect13 import Effect13
 from effects.effect14 import Effect14
 from effects.effect15 import Effect15
+from effects.effect16 import Effect16
+from effects.effect17 import Effect17
+from effects.effect18 import Effect18
 
 
 class Window(QWidget):
@@ -113,6 +116,9 @@ class Window(QWidget):
             "VHS": Effect13,
             "MegaDeepFake": Effect14,
             "Big Brain": Effect15,
+            "gg": Effect16,
+            "symb" :Effect17,
+            "symb_face" :Effect18
         }
         for led in self.effect_dict.keys():
             self.combo_box.addItem(led)
