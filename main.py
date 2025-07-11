@@ -2,6 +2,7 @@ import sys
 import cv2
 import time
 import pyvirtualcam
+import numpy as np
 
 from PyQt6.QtGui import QImage, QPixmap
 from PyQt6.QtCore import Qt, QTimer
@@ -17,30 +18,8 @@ from PyQt6.QtWidgets import (
     QLineEdit,
 )
 
-from effects.base_effect import BaseEffect
+import effects
 
-# FIXME : fix imports
-from effects.effect1 import Effect1
-from effects.effect2 import Effect2
-from effects.effect3 import Effect3
-from effects.effect4 import Effect4
-from effects.effect5 import Effect5
-from effects.effect6 import Effect6
-from effects.effect7 import Effect7
-from effects.effect8 import Effect8
-from effects.effect9 import Effect9
-from effects.effect10 import Effect10
-from effects.effect11 import Effect11
-from effects.effect12 import Effect12
-from effects.effect13 import Effect13
-from effects.effect14 import Effect14
-from effects.effect15 import Effect15
-from effects.effect16 import Effect16
-from effects.effect17 import Effect17
-from effects.effect18 import Effect18
-from effects.effect19 import Effect19
-from effects.effect20 import Effect20
-from effects.effect21 import Effect21
 
 class Window(QWidget):
     def __init__(self):
@@ -100,30 +79,30 @@ class Window(QWidget):
         self.button_start.clicked.connect(self.start_effect)
         effects_l.addWidget(self.button_start)
 
-        self.effect: BaseEffect | None = None
+        self.effect: effects.BaseEffect | None = None
 
-        self.effect_dict: dict[str, BaseEffect] = {
-            "DVD": Effect1,
-            "Rayn Gosling": Effect2,
-            "Deepfake": Effect3,
-            "Enot": Effect4,
-            "Glitch": Effect5,
-            "text": Effect6,
-            "skuf": Effect7,
-            "Jesus": Effect8,
-            "rock": Effect9,
-            "draw": Effect10,
-            "pix": Effect11,
-            "nokia": Effect12,
-            "VHS": Effect13,
-            "MegaDeepFake": Effect14,
-            "Big Brain": Effect15,
-            "gg": Effect16,
-            "symb" :Effect17,
-            "symb_face" :Effect18,
-            "s" :Effect19,
-            "cubes":Effect20,
-            "cool":Effect21
+        self.effect_dict: dict[str, type[effects.BaseEffect]] = {
+            "DVD": effects.Effect1,
+            "Rayn_Gosling": effects.Effect2,
+            "Deepfake": effects.Effect3,
+            "Enot": effects.Effect4,
+            "Glitch": effects.Effect5,
+            "text": effects.Effect6,
+            "skuf": effects.Effect7,
+            "Jesus": effects.Effect8,
+            "rock": effects.Effect9,
+            "draw": effects.Effect10,
+            "pix": effects.Effect11,
+            "nokia": effects.Effect12,
+            "VHS": effects.Effect13,
+            "MegaDeepFake": effects.Effect14,
+            "Big_Breffectsain": effects.Effect15,
+            "gg": effects.Effect16,
+            "symb": effects.Effect17,
+            "symb_face": effects.Effect18,
+            "s": effects.Effect19,
+            "cubes": effects.Effect20,
+            "cool": effects.Effect21,
         }
         for led in self.effect_dict.keys():
             self.combo_box.addItem(led)
@@ -133,11 +112,12 @@ class Window(QWidget):
         self.show()
 
     def start_effect(self):
-        settings_dict = {}
-        for i, (k, v) in enumerate(self.effect._settings_dict.items()):
-            settings_dict[k] = self.settings_list[i][1].text()
+        if self.effect is not None:
+            settings_dict = {}
+            for i, (k, v) in enumerate(self.effect._settings_dict.items()):
+                settings_dict[k] = self.settings_list[i][1].text()
 
-        self.effect.settings(settings_dict)
+            self.effect.settings(settings_dict)
 
     def change_effect(self):
         for i in range(len(self.settings_list)):
@@ -163,17 +143,15 @@ class Window(QWidget):
         fps = 1 / (time.time() - old_time)
         self.info_label.setText(f"FPS:{int(fps)}")
 
-    def show_img(self, frame):
+    def show_img(self, frame: np.ndarray):
         rgb_image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         h, w, ch = rgb_image.shape
         bytes_per_line = ch * w
-        q_image = QImage(
-            rgb_image.data, w, h, bytes_per_line, QImage.Format.Format_RGB888
-        )
+        q_image = QImage(rgb_image.data, w, h, bytes_per_line, QImage.Format.Format_RGB888)
         pixmap = QPixmap.fromImage(q_image)
         self.video_label.setPixmap(pixmap)
 
-    def send_to_cam(self, img):
+    def send_to_cam(self, img: np.ndarray):
         image = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         self.cam.send(image)
         self.cam.sleep_until_next_frame()
