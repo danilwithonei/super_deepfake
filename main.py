@@ -38,7 +38,9 @@ from effects.effect15 import Effect15
 from effects.effect16 import Effect16
 from effects.effect17 import Effect17
 from effects.effect18 import Effect18
-
+from effects.effect19 import Effect19
+from effects.effect20 import Effect20
+from effects.effect21 import Effect21
 
 class Window(QWidget):
     def __init__(self):
@@ -118,7 +120,10 @@ class Window(QWidget):
             "Big Brain": Effect15,
             "gg": Effect16,
             "symb" :Effect17,
-            "symb_face" :Effect18
+            "symb_face" :Effect18,
+            "s" :Effect19,
+            "cubes":Effect20,
+            "cool":Effect21
         }
         for led in self.effect_dict.keys():
             self.combo_box.addItem(led)
