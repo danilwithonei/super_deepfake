@@ -3,10 +3,13 @@ from abc import ABC, abstractmethod
 
 
 class BaseEffect(ABC):
+    _settings_dict: dict[str, str] = {}
+    is_ready: bool = False
+
     @abstractmethod
-    def set_prikol_on_img(img: np.ndarray) -> np.ndarray:
+    def set_prikol_on_img(self, img: np.ndarray) -> np.ndarray:
         pass
 
     @abstractmethod
-    def settings(settings_dict: dict):
+    def settings(self, settings_dict: dict[str, str]):
         pass

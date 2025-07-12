@@ -22,15 +22,15 @@ def trans(src, dst, img, tform, shape):
     return out
 
 
-class Effect16(BaseEffect):
+class Effect19(BaseEffect):
     def __init__(self) -> None:
         super().__init__()
-        self.schema = "face_schemas/face_schema.npy"
+        self.face_path = "images/sasha.png"
+
         self._settings_dict = {
-            "schema": f"{self.schema}",
+            "face_path": f"{self.face_path}",
         }
         self.is_ready = False
-        self.start = True
 
     def detection(self, image):
         image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -65,9 +65,7 @@ class Effect16(BaseEffect):
         return None
 
     def settings(self, settings_dict: dict):
-        self.schema = settings_dict["schema"]
-        self.load_pts = np.load(self.schema)
-        self._load_pts = np.zeros_like(self.load_pts)
+        self.face_path = settings_dict["face_path"]
         self.tform = FastPiecewiseAffineTransform()
         self.mp_face_mesh = mp.solutions.face_mesh
         self.model = self.mp_face_mesh.FaceMesh(
@@ -77,56 +75,44 @@ class Effect16(BaseEffect):
             min_detection_confidence=0.5,
             min_tracking_confidence=0.5,
         )
-        meshes = [
-            self.mp_face_mesh.FACEMESH_FACE_OVAL,
-            self.mp_face_mesh.FACEMESH_LEFT_EYE,
-            self.mp_face_mesh.FACEMESH_LEFT_EYEBROW,
-            self.mp_face_mesh.FACEMESH_RIGHT_EYE,
-            self.mp_face_mesh.FACEMESH_RIGHT_EYEBROW,
-            self.mp_face_mesh.FACEMESH_NOSE,
-            self.mp_face_mesh.FACEMESH_LIPS,
-        ]
+        # self.indices = [50, 280, 4, 168, 330, 111]
         self.indices = []
-        for m in meshes:
-            for i, ii in m:
-                self.indices.append(i)
-                self.indices.append(ii)
 
+        for i, ii in self.mp_face_mesh.FACEMESH_CONTOURS:
+            self.indices.append(i)
+            self.indices.append(ii)
+
+        self.back_img = cv2.imread(self.face_path)
+        self.back_pts = self.detection(self.back_img)
+        self.back_face, self.back_face_pts, self.y_min, self.y_max, self.x_min, self.x_max = self.crop_face(
+            self.back_img,
+            self.back_pts,
+        )
         self.is_ready = True
 
     def set_prikol_on_img(self, img: np.ndarray) -> np.ndarray:
         if not self.is_ready:
             return img
         new_face = None
-
         try:
             res = self.detection(img)
 
             my_face, my_face_pts, y_min, y_max, x_min, x_max = self.crop_face(img, res)
-            h, w, _ = img.shape
-
-            my_face_h, my_face_w, _ = my_face.shape
-            self._load_pts[:, 0] = self.load_pts[:, 0] * my_face_h
-            self._load_pts[:, 1] = self.load_pts[:, 1] * my_face_w
-
-            t_pts = (my_face_pts - self._load_pts).astype(np.int16)
             new_face = (
                 trans(
-                    t_pts,
+                    self.back_face_pts,
                     my_face_pts,
                     my_face,
                     self.tform,
-                    my_face.shape,
+                    self.back_face.shape,
                 )
                 * 255
-            ).astype(np.uint8)
+            )
             my_face_h, my_face_w, _ = my_face.shape
-        except Exception as e:
-            print(e)
+        except:
             pass
         if new_face is not None:
-            mask = np.all(new_face == [0, 0, 0], axis=-1)
-            face = np.where(mask[..., np.newaxis], my_face, new_face)
-            img[y_min:y_max, x_min:x_max] = face
+            face = np.where(new_face == [0, 0, 0], self.back_face.copy(), new_face)
+            self.back_img[self.y_min : self.y_max, self.x_min : self.x_max] = face
 
-        return img
+        return self.back_img

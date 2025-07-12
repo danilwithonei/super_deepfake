@@ -6,3 +6,4 @@ tensorflow
 pyqt6
 opencv-python-headless
 mss
+scikit-image

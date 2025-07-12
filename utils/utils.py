@@ -18,7 +18,7 @@ def mediapipe_detection(
 
 def get_poly_by_line(
     x1: int, y1: int, x2: int, y2: int, length: int
-) -> list[tuple[int, int]]:
+) -> list[list[int]]:
     angle = np.arctan2(y2 - y1, x2 - x1)
 
     x_1 = int(x1 + length * np.cos(angle + np.pi / 2))
