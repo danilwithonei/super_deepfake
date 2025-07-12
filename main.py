@@ -97,7 +97,7 @@ class Window(QWidget):
             "VHS": effects.Effect13,
             "MegaDeepFake": effects.Effect14,
             "Big_Breffectsain": effects.Effect15,
-            "gg": effects.Effect16,
+            "face_schema": effects.Effect16,
             "symb": effects.Effect17,
             "symb_face": effects.Effect18,
             "s": effects.Effect19,

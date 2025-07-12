@@ -9,9 +9,7 @@ class FastPiecewiseAffineTransform(PiecewiseAffineTransform):
     def __call__(self, coords):
         coords = np.asarray(coords)
         simplex = self._tesselation.find_simplex(coords)
-        affines = np.array(
-            [self.affines[i].params for i in range(len(self._tesselation.simplices))]
-        )[simplex]
+        affines = np.array([self.affines[i].params for i in range(len(self._tesselation.simplices))])[simplex]
         pts = np.c_[coords, np.ones((coords.shape[0], 1))]
         result = np.einsum("ij,ikj->ik", pts, affines)
         result[simplex == -1, :] = -1
@@ -27,7 +25,7 @@ def trans(src, dst, img, tform, shape):
 class Effect16(BaseEffect):
     def __init__(self) -> None:
         super().__init__()
-        self.schema = "res.npy"
+        self.schema = "face_schemas/face_schema.npy"
         self._settings_dict = {
             "schema": f"{self.schema}",
         }
@@ -42,9 +40,7 @@ class Effect16(BaseEffect):
             points = np.array(
                 [
                     [int(landmark.x * width), int(landmark.y * height)]
-                    for i, landmark in enumerate(
-                        results.multi_face_landmarks[0].landmark
-                    )
+                    for i, landmark in enumerate(results.multi_face_landmarks[0].landmark)
                     if i in self.indices
                 ]
             )
@@ -102,11 +98,6 @@ class Effect16(BaseEffect):
         if not self.is_ready:
             return img
         new_face = None
-        # if self.start:
-        #     h, w, _ = img.shape
-        #     self.load_pts[:, 0] *= h
-        #     self.load_pts[:, 1] *= w
-        #     self.start = False
 
         try:
             res = self.detection(img)
@@ -128,13 +119,14 @@ class Effect16(BaseEffect):
                     my_face.shape,
                 )
                 * 255
-            )
+            ).astype(np.uint8)
             my_face_h, my_face_w, _ = my_face.shape
         except Exception as e:
             print(e)
             pass
         if new_face is not None:
-            face = np.where(new_face == [0, 0, 0], my_face, new_face)
+            mask = np.all(new_face == [0, 0, 0], axis=-1)
+            face = np.where(mask[..., np.newaxis], my_face, new_face)
             img[y_min:y_max, x_min:x_max] = face
 
         return img
