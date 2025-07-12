@@ -20,7 +20,7 @@ class Effect21(BaseEffect):
         mp_selfie_segmentation = mp.solutions.selfie_segmentation
         self.model = mp_selfie_segmentation.SelfieSegmentation(model_selection=1)
         self.is_ready = True
-        gif = imageio.mimread("v.gif")
+        gif = imageio.mimread("images/v.gif")
         self.back_imgs = [cv2.cvtColor(img, cv2.COLOR_RGB2BGR) for img in gif]
         self.i = 0
         self.b_len = len(self.back_imgs)
