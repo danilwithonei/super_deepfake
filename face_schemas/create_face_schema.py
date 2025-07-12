@@ -72,10 +72,10 @@ orig_img = cv2.resize(orig_img, (600, 600))
 orig_pts = detection(orig_img)
 
 pts = orig_pts.copy()
-load_pts = np.load('face_schema.npy')
+# load_pts = np.load('face_schema.npy')
 
-pts = (orig_pts - load_pts*600).astype(np.int16)
-print(pts)
+# pts = (orig_pts - load_pts*600).astype(np.int16)
+# print(pts)
 dragging_point = None
 
 
@@ -120,5 +120,5 @@ while True:
 
     cv2.imshow("s", res_img)
     if cv2.waitKey(1) == ord("q"):
-        np.save("face_schema.npy",delta)
+        np.save("face_schemas/face_schema2.npy",delta)
         break
