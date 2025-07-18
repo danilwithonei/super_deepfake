@@ -103,6 +103,8 @@ class Window(QWidget):
             "s": effects.Effect19,
             "cubes": effects.Effect20,
             "cool": effects.Effect21,
+            "vb": effects.Effect22,
+            "vb2": effects.Effect23,
         }
         for led in self.effect_dict.keys():
             self.combo_box.addItem(led)
