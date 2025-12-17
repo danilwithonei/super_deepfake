@@ -22,3 +22,4 @@ from effects.effect20 import Effect20
 from effects.effect21 import Effect21
 from effects.effect22 import Effect22
 from effects.effect23 import Effect23
+from effects.effect24 import Effect24
